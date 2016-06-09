@@ -8,6 +8,7 @@ import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlparser.Attribute;
 import org.htmlparser.Node;
 import org.htmlparser.NodeFilter;
 import org.htmlparser.Parser;
@@ -76,8 +77,9 @@ public class WaterShutoffNotice {
 							Node node =  nodes.elementAt(n);
 							if(node instanceof TagNode){
 								Logger.getGlobal().log(Level.INFO," 获取到包含tbody的TagNode");
-								Node no =  nodes.elementAt(n);
+								TagNode no = (TagNode) nodes.elementAt(n);
 								String html=no.toHtml();
+								Attribute tbody=no.getAttributeEx("tbody");
 
 								Parser parser_html= new Parser();
 								parser_html.setInputHTML(html);
