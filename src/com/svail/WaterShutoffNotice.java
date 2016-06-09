@@ -1,6 +1,8 @@
 package com.svail;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
@@ -23,9 +25,6 @@ public class WaterShutoffNotice {
 	public static void main(String[] args) throws IOException {
 		getWaterShutoffNotice("http://www.cq966886.com/wsfw.php?cid=49",
 				              "D:/重庆基础数据抓取/基础数据/停水通知/");
-		
-		//waterNotice("http://www.cq966886.com/wsfw_ny.php?cid=49&id=1845",
-		//		    "D:/重庆基础数据抓取/基础数据/停水通知/");
 	}
 	/**
 	 * 获取某网页的xml内容
@@ -49,49 +48,6 @@ public class WaterShutoffNotice {
 
 	}
 
-	public static String waterNotice(String url,String folder){
-		String poi="";
-			try {
-				String content =fetchURL(url);
-				//content = HTMLTool.fetchURL(url, "utf-8", "get");
-				//System.out.println(content);
-				Parser parser= new Parser();
-				
-				if (content == null) {
-					//FileTool.Dump(url, folder + "-Null.txt", "utf-8");
-				} else {
-					parser.setInputHTML(content);
-					parser.setEncoding("utf-8");
-				    HasParentFilter parentFilter1 = new HasParentFilter(new AndFilter(new TagNameFilter("table"),new HasAttributeFilter("style", "margin:20px 0px;")));
-				    HasParentFilter parentFilter2 = new HasParentFilter(new AndFilter(new TagNameFilter("tbody"),parentFilter1));
-				    HasParentFilter parentFilter3 = new HasParentFilter(new AndFilter(new TagNameFilter("tr"),parentFilter2));
-				    HasParentFilter parentFilter4 = new HasParentFilter(new AndFilter(new TagNameFilter("td"),new AndFilter(parentFilter3,new HasAttributeFilter("class", "list2"))));
-				    NodeFilter filter = new AndFilter(new TagNameFilter("table"),new HasAttributeFilter("style", "margin:20px 0px;"));
-				    //new AndFilter(new TagNameFilter("table"),new HasAttributeFilter("style", "display:inline; float:left; margin-right:35px")),
-				    // new TagNameFilter("a"),parentFilter4
-					NodeList nodes = parser.extractAllNodesThatMatch(filter);
-					if (nodes.size() != 0) {
-						for (int n = 0; n < nodes.size(); n++) {
-							TagNode no = (TagNode) nodes.elementAt(n);					
-							String str=no.toPlainTextString().replace(" ", "").replace("\r\n", "").replace("\t", "").replace("\n", "");
-							//obj.put("content",str);
-							
-						}
-					}
-				}
-
-			} catch (ParserException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NullPointerException e) {
-				System.out.println(e.getMessage());
-				//FileTool.Dump(url, folder + "NullLink.txt", "utf-8");
-			}
-
-		
-	    //poi=obj.toString();
-		return poi;
-	}
 	public static void getWaterShutoffNotice(String url,String folder){
 		
 		String poi="";
@@ -117,32 +73,36 @@ public class WaterShutoffNotice {
 					//System.out.println(content1);
 					if (nodes.size() != 0) {
 						for (int n = 0; n < nodes.size(); n++) {
-							Node no =  nodes.elementAt(n);
+							Node node =  nodes.elementAt(n);
+							if(node instanceof TagNode){
+								Logger.getGlobal().log(Level.INFO," 获取到包含tbody的TagNode");
+								Node no =  nodes.elementAt(n);
+								String html=no.toHtml();
 
-							String html=no.toHtml();
+								Parser parser_html= new Parser();
+								parser_html.setInputHTML(html);
+								parser_html.setEncoding("utf-8");
 
-							Parser parser_html= new Parser();
-							parser_html.setInputHTML(html);
-							parser_html.setEncoding("utf-8");
-							
-							HasParentFilter parentFilter_html = new HasParentFilter(new AndFilter(new TagNameFilter("td"),new HasAttributeFilter("class", "list2")));
-							NodeFilter filter_html = new AndFilter(new TagNameFilter("a"),parentFilter_html);
-							NodeList nodes_html = parser_html.extractAllNodesThatMatch(filter_html);
-							if(nodes_html.size()!=0){
-								JSONObject obj=new JSONObject();
-								for(int i=0;i<nodes_html.size();i++){
-									TagNode no_html = (TagNode) nodes_html.elementAt(i);
-									String str_html=no_html.toPlainTextString().replace(" ", "").replace("\r\n", "").replace("\t", "").replace("\n", "");
-									String href_html=no_html.getAttribute("href");
-									System.out.println(str_html);
-									System.out.println(href_html);
+								HasParentFilter parentFilter_html = new HasParentFilter(new AndFilter(new TagNameFilter("td"),new HasAttributeFilter("class", "list2")));
+								NodeFilter filter_html = new AndFilter(new TagNameFilter("a"),parentFilter_html);
+								NodeList nodes_html = parser_html.extractAllNodesThatMatch(filter_html);
+								if(nodes_html.size()!=0){
+									JSONObject obj=new JSONObject();
+									for(int i=0;i<nodes_html.size();i++){
+										TagNode no_html = (TagNode) nodes_html.elementAt(i);
+										String str_html=no_html.toPlainTextString().replace(" ", "").replace("\r\n", "").replace("\t", "").replace("\n", "");
+										String href_html=no_html.getAttribute("href");
+										System.out.println(str_html);
+										System.out.println(href_html);
+									}
 								}
+
+								String str=no.toPlainTextString().replace(" ", "").replace("\r\n", "").replace("\t", "").replace("\n", "");
+								//obj.put("title", str);
+								//String tur = no.getAttribute("href");
+								//FileTool.Dump(poi, folder.replace("市级链接.txt", "") + "县级链接2.txt", "utf-8");
 							}
-							
-							String str=no.toPlainTextString().replace(" ", "").replace("\r\n", "").replace("\t", "").replace("\n", "");
-							//obj.put("title", str);
-							//String tur = no.getAttribute("href");
-							//FileTool.Dump(poi, folder.replace("市级链接.txt", "") + "县级链接2.txt", "utf-8");
+
 						}
 					}
 				}
